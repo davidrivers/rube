@@ -1,0 +1,85 @@
+#!/usr/bin/env ruby
+
+# TODO store user data in user.yaml
+# TODO break classes out into their own files, refactor, and reconsider the user interface
+
+$Game = 'Rube'
+$demeaning_titles = ['wench', 'prostitute', 'drunkard', 'scumbag', 'criminal']
+
+class Array
+  def rand
+    self[Kernel.rand(self.size)]
+  end
+  def to_list
+    self.map{|i| i.gsub('_', ' ')}.join(', ')
+  end
+end
+
+class String
+  def methodize
+    self.downcase.strip.gsub(/\W+/, '_')
+  end
+end
+
+class User
+  attr_reader :name
+  attr_reader :abilities
+
+  def initialize(name)
+    @name, @abilities = name.strip, Array.new
+  end
+
+  def can(method)
+    # TODO should be a factory that generates an object descendent of an Action class
+    method = method.methodize
+    instance_eval "def #{method}; puts '#{@name} #{method}s skillfully!'; end"
+    @abilities << method
+  end
+
+  def describe
+    puts "You can #{@abilities.to_list}."
+  end
+end
+
+def output(sleep, message=nil)
+  if [Float, Fixnum].include? sleep.class
+    `sleep #{sleep}`
+  else
+    message = sleep
+  end
+  puts
+  puts "#{message}"
+end
+
+puts "Who goes there?!"
+
+$user = User.new(gets) # TODO require non-emptiness
+
+def intro
+  output "Welcome, #{$user.name}, to #{$Game}!"
+  output 1, "...the game that lets you do anything"
+  output 1.5, "...if you tell it how to do the thing!"
+  output 1.5, "#{$user.name}, you can be a warlock, an overlord, or a mangod. Which do you choose?"
+  gets
+  output "Fantastic choice! You are a highly successful #{$demeaning_titles.rand}."
+  output 2, "Society gleams with pride at your lifestyle choices!"
+  output 2, "Anyway, this games is about doing things, and things you will do!"
+  menu
+end
+
+def menu(display_options = false)
+  puts "a: add a new ability\nd: describe yourself\ne: edit your character\nh: help (this message)\nq: quit (and return to pathetic normalcy)" if display_options
+  output "...so whatcha wanna do?"
+  command = case gets.strip
+    when 'a' then output("Type a verb (and optionally a direct object.), e.g. \"dance\" or \"mow lawn\""); $user.can(gets) # Change to "learn how to <action>"
+    when 'd' then $user.describe
+    when 'e' then # edit character
+    when 'h' then menu(true)
+    when 'q' then output 'Quitting for now, but you\'ll come crawling back!'; exit
+    else output "#{command} is not a command or action"
+  end
+  menu(true)
+end
+
+intro
+menu(true)
